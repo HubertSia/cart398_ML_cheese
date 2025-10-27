@@ -1,0 +1,27 @@
+Notes on the CART 398
+
+- Deeper meaning: AI reduces people to simple labels
+- Misclassification could be part of a feature
+- Describe the user's journey: Write a short story from the moment someone walks up to the installation to when they see themselves as cheese
+- Gabriel's ref could be added for the presentation
+- We add sounds for immersion purpose and/or could be dependant on the movement of the user
+- Adding simple user agence: Map distancing and all ect.. bla bla bla
+
+
+Keep the FUNNY
+
+
+
+
+Week 1 (Week of Oct 27): Making the presentation and collecting shirt-colour data via the Teachable Machine model and integrate it with P5.js.
+
+Week 2 (Week of Nov 3): Prototyping visual system, start to implement colour-cheese mapping, sounds and all the goods.
+
+Week 3 (Week of Nov 10): Prototyping visual system, start to implement colour-cheese mapping, sounds and all the goods.
+
+Week 4 (Week of Nov 17): Testing with the projector and mapping, refine the visual quality if needed.
+
+Week 5 (Week of Nov 24): Testing, refinement and final adjustments and presentation.
+
+
+EVERYHTHING MUST BE READY FOR DEC 4TH
