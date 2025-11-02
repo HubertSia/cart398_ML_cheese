@@ -7,23 +7,41 @@
     <title>Cheese Particle Colour Recognition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js"></script>
-    <script src="https://unpkg.com/ml5@1.12.2/dist/ml5.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <!-- TensorFlow.js and Teachable Machine -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <!-- TensorFlow.js Pose Detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.0.0"></script>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
     <div id="container">
-        <h1> Cheese Particle Colour Recognition </h1>
+        <h1>Cheese Particle Colour Recognition</h1>
 
         <div class="instruction">
-            <p>Stand in front of your webcam! Your shirt color will determine your cheese type.</p>
-            <p>Move your arms to control the cheese particles!</p>
+            <p>Click "Start" to begin! Your shirt color determines your cheese type.</p>
+            <p>Move your body to control the cheese particles!</p>
+            <p><strong>Debug:</strong> Press keys 1-5 to manually test cheese types</p>
         </div>
 
-        <div id="cheeseDisplay">Waiting for cheese classification...</div>
+        <!-- Teachable Machine Interface -->
+        <div style="text-align: center; margin: 20px 0;">
+            <div style="font-size: 1.2em; margin-bottom: 10px; color: #ffd700;">Teachable Machine Color Model</div>
+            <button type="button" onclick="initTeachableMachine()" id="startButton"
+                style="padding: 10px 20px; font-size: 1.1em; background: #ffd700; border: none; border-radius: 5px; cursor: pointer;">Start
+                Camera & Model</button>
+        </div>
+
+        <div id="cheeseDisplay">Click "Start" to begin!</div>
+        <div id="status">Status: Waiting for start...</div>
+
+        <!-- Webcam and predictions container -->
+        <div id="webcam-container" style="display: none;"></div>
+        <div id="label-container" style="display: none;"></div>
     </div>
 
-    <!-- Load your external JavaScript file -->
     <script src="js/script.js"></script>
 </body>
 
