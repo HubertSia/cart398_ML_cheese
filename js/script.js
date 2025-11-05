@@ -14,11 +14,11 @@ const TRANSITION_SPEED = 0.05; // How fast transitions happen
 
 // Cheese color mappings
 const cheeseColors = {
-    'Red': { name: 'Cheddar', color: [255, 150, 0], texture: 'sharp' },
-    'Blue': { name: 'Gorgonzola', color: [200, 220, 255], texture: 'veiny' },
-    'Yellow': { name: 'Swiss', color: [255, 255, 150], texture: 'holey' },
-    'Green': { name: 'Pesto', color: [150, 255, 150], texture: 'herby' },
-    'White': { name: 'Mozzarella', color: [255, 255, 255], texture: 'stretchy' }
+    red: { name: 'Cheddar', color: [255, 150, 0], texture: 'sharp' },
+    blue: { name: 'Gorgonzola', color: [200, 220, 255], texture: 'veiny' },
+    yellow: { name: 'Swiss', color: [255, 255, 150], texture: 'holey' },
+    green: { name: 'Pesto', color: [150, 255, 150], texture: 'herby' },
+    white: { name: 'Mozzarella', color: [255, 255, 255], texture: 'stretchy' }
 };
 
 // ========== P5.JS SETUP ==========
@@ -123,38 +123,37 @@ async function predict() {
         const classPrediction = prediction[i].className + ": " + (prediction[i].probability * 100).toFixed(1) + "%";
         labelContainer.childNodes[i].innerHTML = classPrediction;
     }
-    
+
     // Find the highest confidence prediction
     let highestConfidence = 0;
     let detectedClass = null;
-    
+
     for (let i = 0; i < maxPredictions; i++) {
         if (prediction[i].probability > highestConfidence) {
             highestConfidence = prediction[i].probability;
             detectedClass = prediction[i].className;
         }
     }
-    
+
+    // Normalize the detected class name
+    if (detectedClass) {
+        detectedClass = detectedClass.trim().toLowerCase().replace(/\s+/g, '');
+    }
+
+    // Also normalize cheeseColors keys so we can match regardless of format
+    const normalizedCheeseColors = {};
+    for (const key in cheeseColors) {
+        normalizedCheeseColors[key.toLowerCase()] = cheeseColors[key];
+    }
+
     // Start transition if confidence is high enough and it's a new type
-    if (highestConfidence > 0.7 && cheeseColors[detectedClass] && targetCheeseType !== detectedClass) {
+    if (highestConfidence > 0.7 && normalizedCheeseColors[detectedClass] && targetCheeseType !== detectedClass) {
         targetCheeseType = detectedClass;
         transitionProgress = 0.0; // Start new transition
-        console.log(`Starting transition to: ${detectedClass} (${(highestConfidence * 100).toFixed(1)}%)`);
+        console.log(` Transitioning to: ${detectedClass} (${(highestConfidence * 100).toFixed(1)}%)`);
     }
 }
 
-// ========== SMOOTH TRANSITIONS ==========
-function updateTransition() {
-    if (transitionProgress < 1.0) {
-        transitionProgress += TRANSITION_SPEED;
-        
-        // Update display when transition is complete
-        if (transitionProgress >= 1.0) {
-            currentCheeseType = targetCheeseType;
-            updateCheeseDisplay();
-        }
-    }
-}
 
 function interpolateColor(color1, color2, progress) {
     return [
@@ -164,15 +163,34 @@ function interpolateColor(color1, color2, progress) {
     ];
 }
 
-function getTransitionCheeseType() {
-    if (transitionProgress >= 1.0) {
-        return cheeseColors[currentCheeseType];
+function updateTransition() {
+    if (transitionProgress < 1.0) {
+        transitionProgress += TRANSITION_SPEED;
+        
+        if (transitionProgress >= 1.0) {
+            // Ensure valid lowercase key
+            currentCheeseType = targetCheeseType.toLowerCase();
+
+            // Fallback if the detected key doesn’t exist
+            if (!cheeseColors[currentCheeseType]) {
+                console.warn("⚠ Unknown cheese type:", currentCheeseType, "- defaulting to red");
+                currentCheeseType = 'red';
+            }
+
+            updateCheeseDisplay();
+        }
     }
-    
-    const fromCheese = cheeseColors[currentCheeseType];
-    const toCheese = cheeseColors[targetCheeseType];
-    
-    // Create interpolated cheese type
+}
+
+function getTransitionCheeseType() {
+    const fromKey = currentCheeseType?.toLowerCase() || 'red';
+    const toKey = targetCheeseType?.toLowerCase() || fromKey;
+
+    const fromCheese = cheeseColors[fromKey] || cheeseColors['red'];
+    const toCheese = cheeseColors[toKey] || fromCheese;
+
+    if (transitionProgress >= 1.0) return toCheese;
+
     return {
         name: toCheese.name,
         color: interpolateColor(fromCheese.color, toCheese.color, transitionProgress),
@@ -421,6 +439,12 @@ function draw() {
     if (transitionProgress < 1.0) {
         drawTransitionBar();
     }
+    
+    
+    text(`Current: ${currentCheeseType}`, 10, 80);
+    text(`Target: ${targetCheeseType}`, 10, 100);
+
+    
 }
 
 function drawTransitionBar() {
