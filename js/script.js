@@ -10,7 +10,7 @@ let poses = [];
 let isRunning = false;
 let maxPredictions;
 let transitionProgress = 1.0; // 0-1, 1 means transition complete
-const TRANSITION_SPEED = 0.05; // How fast transitions happen
+const transition_speed = 0.05; // How fast transitions happen
 
 // Cheese color mappings
 const cheeseColors = {
@@ -165,7 +165,7 @@ function interpolateColor(color1, color2, progress) {
 
 function updateTransition() {
     if (transitionProgress < 1.0) {
-        transitionProgress += TRANSITION_SPEED;
+        transitionProgress += transition_speed;
         
         if (transitionProgress >= 1.0) {
             // Ensure valid lowercase key
