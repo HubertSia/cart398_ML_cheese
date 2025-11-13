@@ -45,10 +45,7 @@ const hairCheeses = {
   dreadlocks: { name: "Parmesan", color: [250, 240, 200], texture: "granular" },
   curly: { name: "Gouda", color: [255, 210, 120], texture: "wedge" },
   wavy: { name: "Brie", color: [255, 255, 240], texture: "brie" },
-  straight: {
-    name: "Provolone",
-    color: [255, 245, 180],
-    texture: "smoothslice"
+  straight: { name: "Provolone", color: [255, 245, 180], texture: "smoothslice"
   }
 };
 
