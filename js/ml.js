@@ -1,26 +1,32 @@
 // ========== MACHINE LEARNING MODULE ==========
-// Optimized for automatic start & smoother performance using only images
+// automatic start + color + hair + skin tone (image‑only version)
 
 const CONFIG = {
-  WEBCAM_SIZE: 160, // smaller size for faster inference
-  POSE_INTERVAL: 400, // ms between pose detections
+  WEBCAM_SIZE: 160,
+  POSE_INTERVAL: 400,
   COLOR_THRESHOLD: 0.7,
   HAIR_THRESHOLD: 0.75,
+  SKIN_THRESHOLD: 0.7,
   TRANSITION_SPEED: 0.05
 };
 
-let colorModel, hairModel, webcam, poseDetector;
+let colorModel, hairModel, skinModel, webcam, poseDetector;
 let poses = [];
 let maxColorPredictions = 0,
-  maxHairPredictions = 0;
+  maxHairPredictions = 0,
+  maxSkinPredictions = 0;
 
 let currentColorCheese = "red";
 let targetColorCheese = "red";
 let currentHairCheese = "kinky";
 let targetHairCheese = "kinky";
+let currentSkinCheese = "light";
+let targetSkinCheese = "light";
 
 let colorTransition = 1.0;
 let hairTransition = 1.0;
+let skinTransition = 1.0;
+
 let isRunning = false;
 let poseModelLoaded = false;
 let poseBusy = false;
@@ -44,12 +50,13 @@ const hairCheeses = {
   straight: { name: "provolone" }
 };
 
-const hairToCheese = {
-  kinky: "kinky",
-  dreadlocks: "dreadlocks",
-  curly: "curly",
-  wavy: "wavy",
-  straight: "straight"
+// you can point these to whichever cheese image you prefer
+// ========== SKIN‑TONE CHEESES ==========
+const skinCheeses = {
+  light: { name: "feta" },
+  "mid-light": { name: "bluecheese" },
+  "mid-dark": { name: "camembert" },
+  dark: { name: "emmental" }
 };
 
 // ========== INITIALIZATION ==========
@@ -65,19 +72,24 @@ async function initTeachableMachine() {
       "https://teachablemachine.withgoogle.com/models/QQgaNNlJ1/";
     const hairURL =
       "https://teachablemachine.withgoogle.com/models/NkPL0V_Tj/";
+    const skinURL =
+      "https://teachablemachine.withgoogle.com/models/IQ7RA14cv/"; // skin tone
 
-    // Load both models
-    const [cModel, hModel] = await Promise.all([
+    const [cModel, hModel, sModel] = await Promise.all([
       tmImage.load(colorURL + "model.json", colorURL + "metadata.json"),
-      tmImage.load(hairURL + "model.json", hairURL + "metadata.json")
+      tmImage.load(hairURL + "model.json", hairURL + "metadata.json"),
+      tmImage.load(skinURL + "model.json", skinURL + "metadata.json")
     ]);
 
     colorModel = cModel;
     hairModel = hModel;
+    skinModel = sModel;
+
     maxColorPredictions = colorModel.getTotalClasses();
     maxHairPredictions = hairModel.getTotalClasses();
+    maxSkinPredictions = skinModel.getTotalClasses();
 
-    // Setup webcam (hidden)
+    // Webcam setup (hidden)
     const flip = false;
     webcam = new tmImage.Webcam(CONFIG.WEBCAM_SIZE, CONFIG.WEBCAM_SIZE, flip);
     await webcam.setup();
@@ -91,17 +103,13 @@ async function initTeachableMachine() {
       container.style.display = "none";
     }
 
-    // Hide debug info
-    const labelContainer = document.getElementById("label-container");
-    if (labelContainer) labelContainer.style.display = "none";
-
-    // Initialize pose detection with brief delay
+    // init pose later
     setTimeout(initPoseDetection, 500);
 
     isRunning = true;
     if (statusEl)
       statusEl.textContent =
-        "Models loaded! Detecting shirt color & hairstyle...";
+        "Models loaded! Detecting shirt color, hairstyle, and skin tone...";
     predictionLoop();
   } catch (err) {
     console.error("Initialization error:", err);
@@ -116,7 +124,7 @@ async function predictionLoop() {
   if (!isRunning) return;
   try {
     webcam.update();
-    await predictBoth();
+    await predictAll();
   } catch (e) {
     console.warn("Prediction loop error:", e);
   }
@@ -126,7 +134,6 @@ async function predictionLoop() {
 function normalizeKey(name) {
   return (name || "").trim().toLowerCase().replace(/\s+/g, "");
 }
-
 function topClass(preds) {
   return preds.reduce(
     (a, b) => (b.probability > a.probability ? b : a),
@@ -136,38 +143,51 @@ function topClass(preds) {
 
 // ========== PREDICTIONS ==========
 
-async function predictBoth() {
-  if (!colorModel || !hairModel || !isRunning) return;
+async function predictAll() {
+  if (!colorModel || !hairModel || !skinModel || !isRunning) return;
 
-  const [colorPreds, hairPreds] = await Promise.all([
+  const [colorPreds, hairPreds, skinPreds] = await Promise.all([
     colorModel.predict(webcam.canvas),
-    hairModel.predict(webcam.canvas)
+    hairModel.predict(webcam.canvas),
+    skinModel.predict(webcam.canvas)
   ]);
 
   const bestColor = topClass(colorPreds);
   const bestHair = topClass(hairPreds);
+  const bestSkin = topClass(skinPreds);
 
-  const detectedColor = normalizeKey(bestColor.className);
-  const detectedHair = normalizeKey(bestHair.className);
+  const cKey = normalizeKey(bestColor.className);
+  const hKey = normalizeKey(bestHair.className);
+  const sKey = normalizeKey(bestSkin.className);
 
+  // shirt color
   if (
     bestColor.probability >= CONFIG.COLOR_THRESHOLD &&
-    colorCheeses[detectedColor] &&
-    targetColorCheese !== detectedColor
+    colorCheeses[cKey] &&
+    targetColorCheese !== cKey
   ) {
-    targetColorCheese = detectedColor;
+    targetColorCheese = cKey;
     colorTransition = 0.0;
   }
 
-  let mappedHair = null;
-  if (bestHair.probability >= CONFIG.HAIR_THRESHOLD) {
-    const hk = normalizeKey(detectedHair);
-    if (hairToCheese[hk]) mappedHair = hairToCheese[hk];
+  // hair
+  if (
+    bestHair.probability >= CONFIG.HAIR_THRESHOLD &&
+    hairCheeses[hKey] &&
+    targetHairCheese !== hKey
+  ) {
+    targetHairCheese = hKey;
+    hairTransition = 0.0;
   }
 
-  if (mappedHair && hairCheeses[mappedHair]) {
-    targetHairCheese = mappedHair;
-    hairTransition = 0.0;
+  // skin tone
+  if (
+    bestSkin.probability >= CONFIG.SKIN_THRESHOLD &&
+    skinCheeses[sKey] &&
+    targetSkinCheese !== sKey
+  ) {
+    targetSkinCheese = sKey;
+    skinTransition = 0.0;
   }
 }
 
@@ -175,7 +195,6 @@ async function predictBoth() {
 
 async function initPoseDetection() {
   if (typeof tf === "undefined" || typeof poseDetection === "undefined") return;
-
   try {
     const model = poseDetection.SupportedModels.MoveNet;
     const detectorConfig = {
@@ -184,7 +203,6 @@ async function initPoseDetection() {
     };
     poseDetector = await poseDetection.createDetector(model, detectorConfig);
     poseModelLoaded = true;
-    console.log("Pose detection ready");
   } catch (error) {
     console.error("Pose detection load error:", error);
   }
@@ -193,7 +211,6 @@ async function initPoseDetection() {
 async function detectPose() {
   if (!poseModelLoaded || !poseDetector || !webcam || poseBusy) return;
   poseBusy = true;
-
   try {
     poses = await poseDetector.estimatePoses(webcam.canvas, {
       maxPoses: 1,
@@ -211,17 +228,25 @@ async function detectPose() {
 // ========== TRANSITIONS ==========
 
 function updateTransitions() {
+  const step = CONFIG.TRANSITION_SPEED;
   if (colorTransition < 1.0) {
-    colorTransition = Math.min(1.0, colorTransition + CONFIG.TRANSITION_SPEED);
+    colorTransition = Math.min(1.0, colorTransition + step);
     if (colorTransition >= 1.0) {
       currentColorCheese = targetColorCheese;
       updateCheeseDisplay();
     }
   }
   if (hairTransition < 1.0) {
-    hairTransition = Math.min(1.0, hairTransition + CONFIG.TRANSITION_SPEED);
+    hairTransition = Math.min(1.0, hairTransition + step);
     if (hairTransition >= 1.0) {
       currentHairCheese = targetHairCheese;
+      updateCheeseDisplay();
+    }
+  }
+  if (skinTransition < 1.0) {
+    skinTransition = Math.min(1.0, skinTransition + step);
+    if (skinTransition >= 1.0) {
+      currentSkinCheese = targetSkinCheese;
       updateCheeseDisplay();
     }
   }
@@ -229,18 +254,17 @@ function updateTransitions() {
 
 function getTransitionCheese(fromKey, toKey, table, t) {
   const nk = (k) => (k || "").trim().toLowerCase();
-  const safeKey = Object.keys(table)[0];
-  const to = table[nk(toKey)] || table[nk(fromKey)] || table[safeKey];
-  return {
-    name: to.name || "cheddar"
-  };
+  const safe = table[Object.keys(table)[0]];
+  const to = table[nk(toKey)] || table[nk(fromKey)] || safe;
+  return { name: to.name || "cheddar" };
 }
 
 // ========== EXPORTS ==========
+
 Object.assign(window, {
   colorCheeses,
   hairCheeses,
-  hairToCheese,
+  skinCheeses,
   getTransitionCheese,
   updateTransitions,
   initTeachableMachine,
@@ -250,8 +274,11 @@ Object.assign(window, {
   targetColorCheese,
   currentHairCheese,
   targetHairCheese,
+  currentSkinCheese,
+  targetSkinCheese,
   colorTransition,
   hairTransition,
+  skinTransition,
   poseModelLoaded,
   isRunning,
   CONFIG

@@ -3,6 +3,7 @@
 
 let colorParticles = [];
 let hairParticles = [];
+let skinParticles = [];
 let cheeseImages = {};
 
 function preload() {
@@ -16,7 +17,11 @@ function preload() {
     parmesan: loadImage("../images/parmesan.png"),
     gouda: loadImage("../images/gouda.png"),
     brie: loadImage("../images/brie.png"),
-    provolone: loadImage("../images/provolone.png")
+    provolone: loadImage("../images/provolone.png"),
+    feta: loadImage("../images/feta.png"),
+    bluecheese: loadImage("../images/bluecheese.png"),
+    camembert: loadImage("../images/camembert.png"),
+    emmental: loadImage("../images/emmental.png")
   };
 }
 
@@ -31,25 +36,23 @@ function draw() {
 
   updateTransitions();
 
-  if (
-    isRunning &&
-    poseModelLoaded &&
-    millis() - lastPoseTime > CONFIG.POSE_INTERVAL
-  ) {
+  if (isRunning && poseModelLoaded && millis() - lastPoseTime > CONFIG.POSE_INTERVAL) {
     detectPose();
     lastPoseTime = millis();
   }
 
   updateAndDisplayParticles(colorParticles, "color");
   updateAndDisplayParticles(hairParticles, "hair");
+  updateAndDisplayParticles(skinParticles, "skin");
 }
 
 // ========== PARTICLE SYSTEM ==========
 
 function createInitialParticles() {
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 45; i++) {
     colorParticles.push(new CheeseParticle("color"));
     hairParticles.push(new CheeseParticle("hair"));
+    skinParticles.push(new CheeseParticle("skin"));
   }
 }
 
@@ -90,23 +93,18 @@ function updateParticlesWithPose() {
       else if (g === 1 && body.leftWrist?.score > 0.3)
         t = createVector(body.leftWrist.x * scaleX, body.leftWrist.y * scaleY);
       else if (g === 2 && body.rightWrist?.score > 0.3)
-        t = createVector(
-          body.rightWrist.x * scaleX,
-          body.rightWrist.y * scaleY
-        );
+        t = createVector(body.rightWrist.x * scaleX, body.rightWrist.y * scaleY);
       else if (g === 3 && body.leftElbow?.score > 0.3)
         t = createVector(body.leftElbow.x * scaleX, body.leftElbow.y * scaleY);
       else if (g === 4 && body.rightElbow?.score > 0.3)
-        t = createVector(
-          body.rightElbow.x * scaleX,
-          body.rightElbow.y * scaleY
-        );
+        t = createVector(body.rightElbow.x * scaleX, body.rightElbow.y * scaleY);
       p.target = t;
     });
   }
 
   assignTargets(colorParticles);
   assignTargets(hairParticles);
+  assignTargets(skinParticles);
 }
 window.updateParticlesWithPose = updateParticlesWithPose;
 
@@ -117,7 +115,7 @@ class CheeseParticle {
     this.kind = kind;
     this.pos = createVector(width / 2, height / 2);
     this.vel = createVector(random(-2, 2), random(-2, 2));
-    this.size = random(18, 30);
+    this.size = random(60, 100);
     this.life = 255;
     this.decay = random(0.3, 1);
     this.rotation = random(0, TWO_PI);
@@ -145,20 +143,28 @@ class CheeseParticle {
   }
 
   display() {
-    const cheese =
-      this.kind === "color"
-        ? getTransitionCheese(
-            currentColorCheese,
-            targetColorCheese,
-            colorCheeses,
-            colorTransition
-          )
-        : getTransitionCheese(
-            currentHairCheese,
-            targetHairCheese,
-            hairCheeses,
-            hairTransition
-          );
+    let cheese;
+    if (this.kind === "color")
+      cheese = getTransitionCheese(
+        currentColorCheese,
+        targetColorCheese,
+        colorCheeses,
+        colorTransition
+      );
+    else if (this.kind === "hair")
+      cheese = getTransitionCheese(
+        currentHairCheese,
+        targetHairCheese,
+        hairCheeses,
+        hairTransition
+      );
+    else if (this.kind === "skin")
+      cheese = getTransitionCheese(
+        currentSkinCheese,
+        targetSkinCheese,
+        skinCheeses,
+        skinTransition
+      );
 
     const img = cheeseImages[cheese.name.toLowerCase()];
     push();
@@ -185,8 +191,11 @@ class CheeseParticle {
 function updateCheeseDisplay() {
   const display = document.getElementById("cheeseDisplay");
   if (!display) return;
+
   const colorObj = colorCheeses[currentColorCheese] || colorCheeses.red;
   const hairObj = hairCheeses[currentHairCheese] || hairCheeses.kinky;
-  display.textContent = `You are ${colorObj.name} (color) + ${hairObj.name} (hair)!`;
-  display.style.color = "#ffd700"; // static gold color
+  const skinObj = skinCheeses[currentSkinCheese] || skinCheeses.light;
+
+  display.textContent = `You are ${colorObj.name} (shirt) + ${hairObj.name} (hair) + ${skinObj.name} (skin)!`;
+  display.style.color = "#ffd700";
 }
