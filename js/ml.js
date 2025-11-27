@@ -90,7 +90,7 @@ async function initTeachableMachine() {
     maxSkinPredictions = skinModel.getTotalClasses();
 
     // Webcam setup (hidden)
-    const flip = false;
+    const flip = true;
     webcam = new tmImage.Webcam(CONFIG.WEBCAM_SIZE, CONFIG.WEBCAM_SIZE, flip);
     await webcam.setup();
     await webcam.play();
