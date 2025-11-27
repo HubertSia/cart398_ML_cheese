@@ -115,7 +115,7 @@ class CheeseParticle {
     this.kind = kind;
     this.pos = createVector(width / 2, height / 2);
     this.vel = createVector(random(-2, 2), random(-2, 2));
-    this.size = random(60, 100);
+    this.size = random(50, 75);
     this.life = 255;
     this.decay = random(0.3, 1);
     this.rotation = random(0, TWO_PI);
