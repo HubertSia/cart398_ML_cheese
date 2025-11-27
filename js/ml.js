@@ -1,6 +1,13 @@
 // ========== MACHINE LEARNING MODULE ==========
-// Handles loading Teachable Machine models, running predictions,
-// and pose detection. Exports variables that particles.js can use.
+// Optimized for automatic start & smoother performance using only images
+
+const CONFIG = {
+  WEBCAM_SIZE: 160, // smaller size for faster inference
+  POSE_INTERVAL: 400, // ms between pose detections
+  COLOR_THRESHOLD: 0.7,
+  HAIR_THRESHOLD: 0.75,
+  TRANSITION_SPEED: 0.05
+};
 
 let colorModel, hairModel, webcam, poseDetector;
 let poses = [];
@@ -12,50 +19,46 @@ let targetColorCheese = "red";
 let currentHairCheese = "kinky";
 let targetHairCheese = "kinky";
 
-const COLOR_CONFIDENCE_THRESHOLD = 0.7;
-const HAIR_CONFIDENCE_THRESHOLD = 0.75;
-const transitionSpeed = 0.05;
-
 let colorTransition = 1.0;
 let hairTransition = 1.0;
 let isRunning = false;
 let poseModelLoaded = false;
 let poseBusy = false;
+let lastPoseTime = 0;
 
-// ========== CHEESE MAPPINGS ==========
+// ========== CHEESE MAPPINGS (Images Only) ==========
 
 const colorCheeses = {
-  red: { name: "Cheddar", color: [255, 150, 0], texture: "sharp" },
-  blue: { name: "Gorgonzola", color: [200, 220, 255], texture: "veiny" },
-  yellow: { name: "Swiss", color: [255, 255, 150], texture: "holey" },
-  green: { name: "Pesto", color: [150, 255, 150], texture: "herby" },
-  white: { name: "Mozzarella", color: [255, 255, 255], texture: "stretchy" }
+  red: { name: "cheddar" },
+  blue: { name: "gorgonzola" },
+  yellow: { name: "swiss" },
+  green: { name: "pesto" },
+  white: { name: "mozzarella" }
 };
 
 const hairCheeses = {
-  kinky: { name: "Roquefort", color: [185, 210, 230], texture: "veiny" },
-  dreadlocks: { name: "Parmesan", color: [250, 240, 200], texture: "granular" },
-  curly: { name: "Gouda", color: [255, 210, 120], texture: "wedge" },
-  wavy: { name: "Brie", color: [255, 255, 240], texture: "brie" },
-  straight: { name: "Provolone", color: [255, 245, 180], texture: "smoothslice" }
+  kinky: { name: "roquefort" },
+  dreadlocks: { name: "parmesan" },
+  curly: { name: "gouda" },
+  wavy: { name: "brie" },
+  straight: { name: "provolone" }
 };
 
-// Hair class -> hair cheese key
-const hairToCheese = { kinky: "kinky", dreadlocks: "dreadlocks", curly: "curly", wavy: "wavy", straight: "straight" };
+const hairToCheese = {
+  kinky: "kinky",
+  dreadlocks: "dreadlocks",
+  curly: "curly",
+  wavy: "wavy",
+  straight: "straight"
+};
 
 // ========== INITIALIZATION ==========
 
 async function initTeachableMachine() {
   if (isRunning) return;
 
-  console.log("Initializing models...");
   const statusEl = document.getElementById("status");
-  const startBtn = document.getElementById("startButton");
   if (statusEl) statusEl.textContent = "Loading models...";
-  if (startBtn) {
-    startBtn.disabled = true;
-    startBtn.textContent = "Loading...";
-  }
 
   try {
     const colorURL =
@@ -63,6 +66,7 @@ async function initTeachableMachine() {
     const hairURL =
       "https://teachablemachine.withgoogle.com/models/NkPL0V_Tj/";
 
+    // Load both models
     const [cModel, hModel] = await Promise.all([
       tmImage.load(colorURL + "model.json", colorURL + "metadata.json"),
       tmImage.load(hairURL + "model.json", hairURL + "metadata.json")
@@ -70,71 +74,39 @@ async function initTeachableMachine() {
 
     colorModel = cModel;
     hairModel = hModel;
-
     maxColorPredictions = colorModel.getTotalClasses();
     maxHairPredictions = hairModel.getTotalClasses();
 
-    // Webcam
+    // Setup webcam (hidden)
     const flip = false;
-    webcam = new tmImage.Webcam(200, 200, flip);
+    webcam = new tmImage.Webcam(CONFIG.WEBCAM_SIZE, CONFIG.WEBCAM_SIZE, flip);
     await webcam.setup();
     await webcam.play();
+    webcam.canvas.style.display = "none";
 
-    const webcamContainer = document.getElementById("webcam-container");
-    if (webcamContainer) {
-      webcamContainer.innerHTML = "";
-      webcamContainer.appendChild(webcam.canvas);
-      webcamContainer.style.display = "block";
+    const container = document.getElementById("webcam-container");
+    if (container) {
+      container.innerHTML = "";
+      container.appendChild(webcam.canvas);
+      container.style.display = "none";
     }
 
-    // Prediction labels UI setup
+    // Hide debug info
     const labelContainer = document.getElementById("label-container");
-    if (labelContainer) {
-      labelContainer.innerHTML = "";
+    if (labelContainer) labelContainer.style.display = "none";
 
-      const colorHeader = document.createElement("div");
-      colorHeader.textContent = "Shirt Color Predictions:";
-      colorHeader.style.marginTop = "8px";
-      colorHeader.style.color = "#ffd700";
-      labelContainer.appendChild(colorHeader);
-
-      for (let i = 0; i < maxColorPredictions; i++) {
-        const div = document.createElement("div");
-        div.className = "prediction-label";
-        labelContainer.appendChild(div);
-      }
-
-      const hairHeader = document.createElement("div");
-      hairHeader.textContent = "Hair Style Predictions:";
-      hairHeader.style.marginTop = "12px";
-      hairHeader.style.color = "#ffd700";
-      labelContainer.appendChild(hairHeader);
-
-      for (let i = 0; i < maxHairPredictions; i++) {
-        const div = document.createElement("div");
-        div.className = "prediction-label";
-        labelContainer.appendChild(div);
-      }
-
-      labelContainer.style.display = "block";
-    }
-
-    // Initialize pose detection
-    await initPoseDetection();
+    // Initialize pose detection with brief delay
+    setTimeout(initPoseDetection, 500);
 
     isRunning = true;
     if (statusEl)
-      statusEl.textContent = "Models ready! Show shirt color and hairstyle!";
-    if (startBtn) startBtn.textContent = "Running...";
-
+      statusEl.textContent =
+        "Models loaded! Detecting shirt color & hairstyle...";
     predictionLoop();
   } catch (err) {
-    console.error(err);
-    if (statusEl) statusEl.textContent = "Error: " + err.message;
-    if (startBtn) {
-      startBtn.disabled = false;
-      startBtn.textContent = "Start Camera & Model";
-    }
+    console.error("Initialization error:", err);
+    if (statusEl)
+      statusEl.textContent = "Error loading models: " + err.message;
   }
 }
 
@@ -143,35 +115,26 @@ async function initTeachableMachine() {
 async function predictionLoop() {
   if (!isRunning) return;
   try {
-    try {
-      webcam.update();
-    } catch (e) {
-      console.warn("webcam update error:", e);
-    }
-
-    try {
-      await predictBoth();
-    } catch (e) {
-      console.warn("predictBoth error (continuing):", e);
-    }
+    webcam.update();
+    await predictBoth();
   } catch (e) {
-    console.warn("prediction loop outer error:", e);
+    console.warn("Prediction loop error:", e);
   }
-
   setTimeout(predictionLoop, 100);
 }
 
 function normalizeKey(name) {
   return (name || "").trim().toLowerCase().replace(/\s+/g, "");
 }
+
 function topClass(preds) {
-  let best = { className: null, probability: 0 };
-  for (const p of preds)
-    if (p.probability > best.probability) best = p;
-  return best;
+  return preds.reduce(
+    (a, b) => (b.probability > a.probability ? b : a),
+    { className: "", probability: 0 }
+  );
 }
 
-// ========== PREDICTION HANDLER ==========
+// ========== PREDICTIONS ==========
 
 async function predictBoth() {
   if (!colorModel || !hairModel || !isRunning) return;
@@ -181,82 +144,38 @@ async function predictBoth() {
     hairModel.predict(webcam.canvas)
   ]);
 
-  // Display predictions
-  const labelContainer = document.getElementById("label-container");
-  if (labelContainer) {
-    const kids = Array.from(labelContainer.children);
-    const colorStart = 1;
-    const hairHeaderIndex = colorStart + maxColorPredictions;
-    const hairStart = hairHeaderIndex + 1;
-
-    for (
-      let i = 0;
-      i <
-      Math.min(maxColorPredictions, colorPreds.length, kids.length - colorStart);
-      i++
-    ) {
-      const el = kids[colorStart + i];
-      const p = colorPreds[i];
-      if (el && p)
-        el.innerHTML =
-          p.className + ": " + (p.probability * 100).toFixed(1) + "%";
-    }
-
-    for (
-      let i = 0;
-      i <
-      Math.min(maxHairPredictions, hairPreds.length, kids.length - hairStart);
-      i++
-    ) {
-      const el = kids[hairStart + i];
-      const p = hairPreds[i];
-      if (el && p)
-        el.innerHTML =
-          p.className + ": " + (p.probability * 100).toFixed(1) + "%";
-    }
-  }
-
-  // Handle color selection
-  const bestColor = colorPreds.length
-    ? topClass(colorPreds)
-    : { className: "", probability: 0 };
-  const bestHair = hairPreds.length
-    ? topClass(hairPreds)
-    : { className: "", probability: 0 };
+  const bestColor = topClass(colorPreds);
+  const bestHair = topClass(hairPreds);
 
   const detectedColor = normalizeKey(bestColor.className);
   const detectedHair = normalizeKey(bestHair.className);
 
   if (
-    bestColor.probability >= COLOR_CONFIDENCE_THRESHOLD &&
+    bestColor.probability >= CONFIG.COLOR_THRESHOLD &&
     colorCheeses[detectedColor] &&
     targetColorCheese !== detectedColor
   ) {
     targetColorCheese = detectedColor;
     colorTransition = 0.0;
-    console.log("Color →", detectedColor);
   }
 
   let mappedHair = null;
-  if (bestHair.probability >= HAIR_CONFIDENCE_THRESHOLD) {
+  if (bestHair.probability >= CONFIG.HAIR_THRESHOLD) {
     const hk = normalizeKey(detectedHair);
     if (hairToCheese[hk]) mappedHair = hairToCheese[hk];
   }
+
   if (mappedHair && hairCheeses[mappedHair]) {
     targetHairCheese = mappedHair;
     hairTransition = 0.0;
-    console.log("Hair →", mappedHair);
   }
 }
 
 // ========== POSE DETECTION ==========
 
 async function initPoseDetection() {
-  console.log("Initializing pose detection...");
-  if (typeof tf === "undefined" || typeof poseDetection === "undefined") {
-    console.warn("Pose not available - particles won’t follow body");
-    return;
-  }
+  if (typeof tf === "undefined" || typeof poseDetection === "undefined") return;
+
   try {
     const model = poseDetection.SupportedModels.MoveNet;
     const detectorConfig = {
@@ -265,7 +184,7 @@ async function initPoseDetection() {
     };
     poseDetector = await poseDetection.createDetector(model, detectorConfig);
     poseModelLoaded = true;
-    console.log("MoveNet pose detector created");
+    console.log("Pose detection ready");
   } catch (error) {
     console.error("Pose detection load error:", error);
   }
@@ -274,15 +193,14 @@ async function initPoseDetection() {
 async function detectPose() {
   if (!poseModelLoaded || !poseDetector || !webcam || poseBusy) return;
   poseBusy = true;
+
   try {
     poses = await poseDetector.estimatePoses(webcam.canvas, {
       maxPoses: 1,
       flipHorizontal: false
     });
-    // This is defined in particles.js
-    if (typeof updateParticlesWithPose === "function") {
+    if (typeof updateParticlesWithPose === "function")
       updateParticlesWithPose();
-    }
   } catch (e) {
     console.error("Pose error:", e);
   } finally {
@@ -294,16 +212,16 @@ async function detectPose() {
 
 function updateTransitions() {
   if (colorTransition < 1.0) {
-    colorTransition = Math.min(1.0, colorTransition + transitionSpeed);
+    colorTransition = Math.min(1.0, colorTransition + CONFIG.TRANSITION_SPEED);
     if (colorTransition >= 1.0) {
-      currentColorCheese = targetColorCheese || currentColorCheese;
+      currentColorCheese = targetColorCheese;
       updateCheeseDisplay();
     }
   }
   if (hairTransition < 1.0) {
-    hairTransition = Math.min(1.0, hairTransition + transitionSpeed);
+    hairTransition = Math.min(1.0, hairTransition + CONFIG.TRANSITION_SPEED);
     if (hairTransition >= 1.0) {
-      currentHairCheese = targetHairCheese || currentHairCheese;
+      currentHairCheese = targetHairCheese;
       updateCheeseDisplay();
     }
   }
@@ -311,17 +229,14 @@ function updateTransitions() {
 
 function getTransitionCheese(fromKey, toKey, table, t) {
   const nk = (k) => (k || "").trim().toLowerCase();
-  const safe = table[Object.keys(table)[0]];
-  const to = table[nk(toKey)] || table[nk(fromKey)] || safe;
+  const safeKey = Object.keys(table)[0];
+  const to = table[nk(toKey)] || table[nk(fromKey)] || table[safeKey];
   return {
-    name: typeof to.name === "string" ? to.name : "Unknown",
-    color: Array.isArray(to.color) ? to.color : [255, 255, 255],
-    texture: typeof to.texture === "string" ? to.texture : "basic"
+    name: to.name || "cheddar"
   };
 }
 
 // ========== EXPORTS ==========
-
 Object.assign(window, {
   colorCheeses,
   hairCheeses,
@@ -330,7 +245,7 @@ Object.assign(window, {
   updateTransitions,
   initTeachableMachine,
   detectPose,
-  transitionSpeed,
+  poses,
   currentColorCheese,
   targetColorCheese,
   currentHairCheese,
@@ -339,5 +254,5 @@ Object.assign(window, {
   hairTransition,
   poseModelLoaded,
   isRunning,
-  poses
+  CONFIG
 });
