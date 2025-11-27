@@ -26,7 +26,7 @@ function preload() {
 }
 
 function setup() {
-  const canvas = createCanvas(900, 900);
+	const canvas = createCanvas(windowWidth * 0.9, windowHeight * 0.9);
   canvas.parent("container");
   createInitialParticles();
 }

@@ -58,3 +58,32 @@ canvas {
     border-radius: 3px;
     font-size: 0.9em;
 }
+
+
+.controls {
+    margin: 15px 0;
+    text-align: center;
+}
+
+button {
+    background-color: #ffcc00;
+    border: none;
+    color: #000;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 0 8px;
+    border-radius: 5px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+button:hover {
+    background-color: #ffaa00;
+    transform: scale(1.05);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}

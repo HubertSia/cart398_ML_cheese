@@ -24,30 +24,65 @@
 <body>
     <div id="container">
         <h1>Cheese Particle Colour Recognition</h1>
-
+        
         <div class="instruction">
             <p>
-                Models run automatically when the page loads.<br />
+                Models run when you press <strong>Start</strong>.<br />
                 Your shirt color determines your cheese type!
             </p>
             <p>Move your body to guide the cheese particles.</p>
         </div>
 
-        <div id="cheeseDisplay">Initializing machine learning models...</div>
-        <div id="status">Status: Loading...</div>
 
         <div id="webcam-container" style="display: none"></div>
         <div id="label-container" style="display: none"></div>
     </div>
+    
+    <div id="cheeseDisplay">Press "Start" to begin!</div>
+    <div id="status">Status: Idle.</div>
 
-    <!-- Load modules in correct order -->
+    
+    
+    <div class="controls">
+        <button id="startBtn">Start</button>
+        <button id="pauseBtn" disabled>Pause</button>
+    </div>
+
+    
+    
+    <!-- Load your modules -->
     <script src="js/ml.js" defer></script>
     <script src="js/particles.js" defer></script>
 
-    <!-- Auto-start ML -->
+    <!-- Start / Pause control -->
     <script defer>
+        let paused = false;
+
         window.addEventListener("load", () => {
-            initTeachableMachine(); // start automatically
+            const startBtn = document.getElementById("startBtn");
+            const pauseBtn = document.getElementById("pauseBtn");
+
+            startBtn.addEventListener("click", async () => {
+                if (!isRunning) {
+                    await initTeachableMachine();
+                } else if (paused) {
+                    paused = false;
+                    isRunning = true;
+                }
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                const statusTxt = document.getElementById("status");
+                if (statusTxt) statusTxt.textContent = "Status: Running...";
+            });
+
+            pauseBtn.addEventListener("click", () => {
+                paused = true;
+                isRunning = false;
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                const statusTxt = document.getElementById("status");
+                if (statusTxt) statusTxt.textContent = "Status: Paused.";
+            });
         });
     </script>
 </body>
