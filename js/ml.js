@@ -3,7 +3,7 @@
 
 const CONFIG = {
   WEBCAM_SIZE: 160,
-  POSE_INTERVAL: 400,
+  POSE_INTERVAL: 150,
   COLOR_THRESHOLD: 0.7,
   HAIR_THRESHOLD: 0.75,
   SKIN_THRESHOLD: 0.7,
@@ -73,7 +73,7 @@ async function initTeachableMachine() {
     const hairURL =
       "https://teachablemachine.withgoogle.com/models/NkPL0V_Tj/";
     const skinURL =
-      "https://teachablemachine.withgoogle.com/models/IQ7RA14cv/"; // skin tone
+      "https://teachablemachine.withgoogle.com/models/IQ7RA14cv/"; 
 
     const [cModel, hModel, sModel] = await Promise.all([
       tmImage.load(colorURL + "model.json", colorURL + "metadata.json"),
@@ -282,4 +282,11 @@ Object.assign(window, {
   poseModelLoaded,
   isRunning,
   CONFIG
+});
+
+window.addEventListener("resize", () => {
+  if (webcam && webcam.canvas) {
+    webcam.canvas.width = CONFIG.WEBCAM_SIZE;
+    webcam.canvas.height = CONFIG.WEBCAM_SIZE;
+  }
 });

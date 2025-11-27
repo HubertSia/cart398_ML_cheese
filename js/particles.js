@@ -6,18 +6,29 @@ let hairParticles = [];
 let skinParticles = [];
 let cheeseImages = {};
 
+let lastLeftWrist = null;
+let lastRightWrist = null;
+let lastMotionTime = 0;
+
+
 function preload() {
   cheeseImages = {
+    
+    // Color shirts
     cheddar: loadImage("../images/cheddar.png"),
     gorgonzola: loadImage("../images/gorgonzola.png"),
     swiss: loadImage("../images/swiss.png"),
     pesto: loadImage("../images/pesto.png"),
     mozzarella: loadImage("../images/mozza.png"),
+    
+    // Hair Style
     roquefort: loadImage("../images/roquefort.png"),
     parmesan: loadImage("../images/parmesan.png"),
     gouda: loadImage("../images/gouda.png"),
     brie: loadImage("../images/brie.png"),
     provolone: loadImage("../images/provolone.png"),
+    
+    // Skin-tone
     feta: loadImage("../images/feta.png"),
     bluecheese: loadImage("../images/bluecheese.png"),
     camembert: loadImage("../images/camembert.png"),
@@ -48,6 +59,8 @@ function draw() {
 
 // ========== PARTICLE SYSTEM ==========
 
+
+// All of the particles start in the midde
 function createInitialParticles() {
   for (let i = 0; i < 45; i++) {
     colorParticles.push(new CheeseParticle("color"));
@@ -56,6 +69,7 @@ function createInitialParticles() {
   }
 }
 
+// Update and display particles in real time
 function updateAndDisplayParticles(array, kind) {
   for (let i = array.length - 1; i >= 0; i--) {
     const p = array[i];
@@ -70,11 +84,13 @@ function updateAndDisplayParticles(array, kind) {
 
 // ========== POSE CONTROL ==========
 
+
 function updateParticlesWithPose() {
   if (!poses.length || !poses[0].keypoints) return;
   const kp = poses[0].keypoints;
-  const scaleX = width / 200;
-  const scaleY = height / 200;
+
+  const scaleX = width / CONFIG.WEBCAM_SIZE;
+  const scaleY = height / CONFIG.WEBCAM_SIZE;
 
   const body = {
     nose: kp.find((k) => k.name === "nose"),
@@ -84,6 +100,7 @@ function updateParticlesWithPose() {
     rightElbow: kp.find((k) => k.name === "right_elbow")
   };
 
+  // Smooth assignment (with interpolation)
   function assignTargets(particles) {
     particles.forEach((p, i) => {
       let t = null;
@@ -98,15 +115,61 @@ function updateParticlesWithPose() {
         t = createVector(body.leftElbow.x * scaleX, body.leftElbow.y * scaleY);
       else if (g === 4 && body.rightElbow?.score > 0.3)
         t = createVector(body.rightElbow.x * scaleX, body.rightElbow.y * scaleY);
-      p.target = t;
+
+      if (t) {
+        if (p.target) {
+          // Interpolate for smoother motion
+          p.target.x = lerp(p.target.x, t.x, 0.3);
+          p.target.y = lerp(p.target.y, t.y, 0.3);
+        } else {
+          p.target = t.copy();
+        }
+      }
     });
   }
 
   assignTargets(colorParticles);
   assignTargets(hairParticles);
   assignTargets(skinParticles);
+
+  detectHandMotion(body, scaleX, scaleY);
 }
 window.updateParticlesWithPose = updateParticlesWithPose;
+
+
+
+
+
+function detectHandMotion(body, scaleX, scaleY) {
+  const left = body.leftWrist;
+  const right = body.rightWrist;
+  const threshold = 25; // pixels per update
+
+  // Skip if wrists aren't detected
+  if (!left || !right || left.score < 0.3 || right.score < 0.3) return;
+
+  const leftPos = createVector(left.x * scaleX, left.y * scaleY);
+  const rightPos = createVector(right.x * scaleX, right.y * scaleY);
+
+  // Calculate movement distance
+  let leftSpeed = 0;
+  let rightSpeed = 0;
+
+  if (lastLeftWrist) leftSpeed = p5.Vector.dist(leftPos, lastLeftWrist);
+  if (lastRightWrist) rightSpeed = p5.Vector.dist(rightPos, lastRightWrist);
+
+  lastLeftWrist = leftPos.copy();
+  lastRightWrist = rightPos.copy();
+
+  // Trigger particle reaction if significant motion detected
+  const now = millis();
+  if (now - lastMotionTime > 800 && (leftSpeed > threshold || rightSpeed > threshold)) {
+    lastMotionTime = now;
+  }
+}
+
+
+
 
 // ========== CHEESE PARTICLE CLASS ==========
 
