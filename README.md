@@ -9,6 +9,10 @@
 - ENJOY
 
 
+# Data set used for the project
+- Color Clothing: https://www.kaggle.com/datasets/kaiska/apparel-dataset?resource=download
+- Hair style: https://www.kaggle.com/datasets/kavyasreeb/hair-type-dataset
+- Skin tone: https://www.kaggle.com/datasets/ducnguyen168/dataset-skin-tone
 
 
 Cheesy project by Emma and Hubert
