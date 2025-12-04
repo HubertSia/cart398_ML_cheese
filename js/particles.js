@@ -11,6 +11,83 @@ let lastRightWrist = null;
 let lastMotionTime = 0;
 
 
+
+
+// ========== COMBO COMMENTARY ==========
+
+const comboCommentary = {
+  "red-curly-light":
+    "Sharp, sweet, and salty, basically a walking emotional roller-grater.",
+  "blue-straight-mid-dark":
+    "Smells dramatic, acts mild, melts into chaos by 3pm.",
+  "yellow-kinky-dark":
+    "Holy, funky, and tangy, like a polite chaos demon.",
+  "green-wavy-mid-light":
+    "Soft, herby, and slightly feral. Might lecture you about houseplants.",
+  "white-dreadlocks-mid-dark":
+    "Stretchy, judgy, and secretly dramatic. Crying inside but it tastes great.",
+  "red-straight-light":
+    "Sharp but pretending to be chill while aggressively salty.",
+  "yellow-curly-mid-light":
+    "Sweet, smoky, and surprisingly funky, like a jazz musician made of dairy.",
+  "green-straight-dark":
+    "Looks fancy, acts mild, tastes like a forest with commitment issues.",
+  "blue-wavy-light":
+    "Soft, stinky, and salty like a gossiping pillow.",
+  "white-curly-mid-light":
+    "Stretchy, sweet, and melts into drama. A motivational speaker on meltdown mode.",
+  "red-kinky-dark":
+    "Sharp, chaotic, and full of holes like a villain with plot armor.",
+  "yellow-dreadlocks-mid-dark":
+    "Holy, crunchy, and melts into drama. A motivational speaker on meltdown mode.",
+  "green-wavy-mid-dark":
+    "Soft, herbal, and gets runnier the longer you look at them.",
+  "white-straight-light":
+    "Chill, mild, and suddenly salty. The friend who 'doesn't care' but absolutely cares.",
+  "yellow-kinky-mid-light":
+    "Mild face, feral interior. Smells like it’s planning something.",
+  "red-dreadlocks-mid-dark":
+    "Sharp, ancient, and melts under pressure. Literally anxiety cheese.",
+  "blue-curly-dark":
+    "Funky, sweet, and oddly wholesome like a grandparent who skateboards.",
+  "red-dreadlocks-mid-light":
+    "Old soul, sharp wit, and crumbly under pressure — the snack philosopher combo.",
+  "red-dreadlocks-light":
+    "Salty optimism meets crunch-time wisdom. You make chaos taste aged and refined.",
+  "red-parmesan-mid-light":
+    "Aged flavor with a bite — probably muttering something profound while melting.",
+  "red-dreadlocks-dark":
+    "Crunchy humor hiding existential salt. A classic vintage energy wrapped in chaos.",
+  "red-wavy-light":
+    "Soft‑hearted and spicy — brings warmth and unfiltered gossip to any room.",
+  "red-straight-mid-dark":
+    "Looks stable, but harbors secret tangy turbulence beneath that calm melt.",
+  "yellow-parmesan-light":
+    "Sweet yet bitter when provoked — probably the responsible friend in the fondue.",
+  "yellow-dreadlocks-dark":
+    "Rich, crumbly, and dramatic. Smells like confidence and late‑night decisions.",
+  "yellow-straight-mid-dark":
+    "Golden, balanced, but secretly plotting a flavor coup.",
+  "green-kinky-mid-dark":
+    "Herbal intensity meets funky rebellion. Aromatic chaos embodied.",
+  "green-dreadlocks-mid-light":
+    "Savory, free‑spirited, and slightly over‑fermented in the best way.",
+  "blue-curly-mid-light":
+    "Sweet mischief wrapped in dramatic aroma. You hug like a perfume explosion.",
+  "blue-straight-light":
+    "Polished exterior, creamy interior, and deeply sarcastic soul.",
+  "white-kinky-mid-dark":
+    "Soft exterior, unpredictable interior — quietly scheming for world fondue domination.",
+  "white-curly-dark":
+    "Melty, emotional, and somehow both classy and sticky at once.",
+  "white-dreadlocks-dark":
+    "Stretchy resilience with a sharp outline — the main character of dairycore.",
+  default:
+    "We don’t know what to say about you — perhaps you’re a new kind of cheese entirely!"
+};
+
+
+
 function preload() {
   cheeseImages = {
     
@@ -259,6 +336,27 @@ function updateCheeseDisplay() {
   const hairObj = hairCheeses[currentHairCheese] || hairCheeses.kinky;
   const skinObj = skinCheeses[currentSkinCheese] || skinCheeses.light;
 
-  display.textContent = `You are ${colorObj.name} (shirt) + ${hairObj.name} (hair) + ${skinObj.name} (skin)!`;
+  const comboKey = `${currentColorCheese}-${currentHairCheese}-${currentSkinCheese}`;
+  const comboText = `You are ${colorObj.name} (shirt) + ${hairObj.name} (hair) + ${skinObj.name} (skin)!`;
+
+  // Smart fallback generator
+  let commentary = comboCommentary[comboKey.toLowerCase()];
+  if (!commentary) {
+    // make a randomized playful fallback
+    const randomFallbacks = [
+      "Mild yet unpredictable — we’d ferment art with you any day.",
+      "A rare vintage blend of chaos and charm. Aged to perfection?",
+      "Distinct, buttery, and a little untamed — definitely a limited-edition flavor.",
+      "Somewhere between sweet cream and full meltdown… in a good way.",
+      "Mysteriously cheesy. Possibly immortalized on a fancy charcuterie board.",
+      "Complex notes of drama and delight swirl in your presence.",
+      "Experimental dairy vibes detected — award-winning potential!",
+      "Hard to categorize, impossible to ignore — you’re cheese avant-garde."
+    ];
+    commentary =
+      randomFallbacks[Math.floor(Math.random() * randomFallbacks.length)];
+  }
+
+  display.innerHTML = `<strong>${comboText}</strong><br><em>${commentary}</em>`;
   display.style.color = "#ffd700";
 }
