@@ -9,6 +9,11 @@ body {
     align-items: center;
 }
 
+h1{
+    margin: 0;
+    font-size: 5em;
+}
+
 #container {
     display: flex;
     flex-direction: column;
