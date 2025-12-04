@@ -51,19 +51,19 @@ const comboCommentary = {
   "blue-curly-dark":
     "Funky, sweet, and oddly wholesome like a grandparent who skateboards.",
   "red-dreadlocks-mid-light":
-    "Old soul, sharp wit, and crumbly under pressure — the snack philosopher combo.",
+    "Old soul, sharp wit, and crumbly under pressure the snack philosopher combo.",
   "red-dreadlocks-light":
     "Salty optimism meets crunch-time wisdom. You make chaos taste aged and refined.",
   "red-parmesan-mid-light":
-    "Aged flavor with a bite — probably muttering something profound while melting.",
+    "Aged flavor with a bite probably muttering something profound while melting.",
   "red-dreadlocks-dark":
     "Crunchy humor hiding existential salt. A classic vintage energy wrapped in chaos.",
   "red-wavy-light":
-    "Soft‑hearted and spicy — brings warmth and unfiltered gossip to any room.",
+    "Soft‑hearted and spicy brings warmth and unfiltered gossip to any room.",
   "red-straight-mid-dark":
     "Looks stable, but harbors secret tangy turbulence beneath that calm melt.",
   "yellow-parmesan-light":
-    "Sweet yet bitter when provoked — probably the responsible friend in the fondue.",
+    "Sweet yet bitter when provoked probably the responsible friend in the fondue.",
   "yellow-dreadlocks-dark":
     "Rich, crumbly, and dramatic. Smells like confidence and late‑night decisions.",
   "yellow-straight-mid-dark":
@@ -77,13 +77,13 @@ const comboCommentary = {
   "blue-straight-light":
     "Polished exterior, creamy interior, and deeply sarcastic soul.",
   "white-kinky-mid-dark":
-    "Soft exterior, unpredictable interior — quietly scheming for world fondue domination.",
+    "Soft exterior, unpredictable interior quietly scheming for world fondue domination.",
   "white-curly-dark":
     "Melty, emotional, and somehow both classy and sticky at once.",
   "white-dreadlocks-dark":
-    "Stretchy resilience with a sharp outline — the main character of dairycore.",
+    "Stretchy resilience with a sharp outline the main character of dairycore.",
   default:
-    "We don’t know what to say about you — perhaps you’re a new kind of cheese entirely!"
+    "We don’t know what to say about you... Perhaps you’re a new kind of cheese entirely!"
 };
 
 
