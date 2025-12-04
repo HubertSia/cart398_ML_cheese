@@ -311,7 +311,7 @@ class CheeseParticle {
   }
 }
 
-// ========== UI DISPLAY (with 5s delay) ==========
+// ========== UI DISPLAY (with 10s delay) ==========
 
 let cheeseDisplayTimer = null;
 
@@ -338,7 +338,12 @@ function updateCheeseDisplay() {
     const randomFallbacks = [
       "Mild yet unpredictable, we’d ferment art with you any day.",
       "A rare vintage blend of chaos and charm. Aged to perfection?",
-      "Distinct, buttery, and a little untamed, definitely a limited‑edition flavor."
+      "Distinct, buttery, and a little untamed, definitely a limited‑edition flavor.",
+      "Somewhere between sweet cream and full meltdown… in a good way.",
+      "Mysteriously cheesy. Possibly immortalized on a fancy charcuterie board.",
+      "Complex notes of drama and delight swirl in your presence.",
+      "Experimental dairy vibes detected, award‑winning potential!",
+      "Hard to categorize, impossible to ignore, you’re cheese avant‑garde.",
     ];
     commentary =
       randomFallbacks[Math.floor(Math.random() * randomFallbacks.length)];
