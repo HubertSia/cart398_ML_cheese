@@ -10,9 +10,6 @@ let lastLeftWrist = null;
 let lastRightWrist = null;
 let lastMotionTime = 0;
 
-
-
-
 // ========== COMBO COMMENTARY ==========
 
 const comboCommentary = {
@@ -51,19 +48,19 @@ const comboCommentary = {
   "blue-curly-dark":
     "Funky, sweet, and oddly wholesome like a grandparent who skateboards.",
   "red-dreadlocks-mid-light":
-    "Old soul, sharp wit, and crumbly under pressure — the snack philosopher combo.",
+    "Old soul, sharp wit, and crumbly under pressure the snack philosopher combo.",
   "red-dreadlocks-light":
     "Salty optimism meets crunch-time wisdom. You make chaos taste aged and refined.",
   "red-parmesan-mid-light":
-    "Aged flavor with a bite — probably muttering something profound while melting.",
+    "Aged flavor with a bite probably muttering something profound while melting.",
   "red-dreadlocks-dark":
     "Crunchy humor hiding existential salt. A classic vintage energy wrapped in chaos.",
   "red-wavy-light":
-    "Soft‑hearted and spicy — brings warmth and unfiltered gossip to any room.",
+    "Soft‑hearted and spicy brings warmth and unfiltered gossip to any room.",
   "red-straight-mid-dark":
     "Looks stable, but harbors secret tangy turbulence beneath that calm melt.",
   "yellow-parmesan-light":
-    "Sweet yet bitter when provoked — probably the responsible friend in the fondue.",
+    "Sweet yet bitter when provoked probably the responsible friend in the fondue.",
   "yellow-dreadlocks-dark":
     "Rich, crumbly, and dramatic. Smells like confidence and late‑night decisions.",
   "yellow-straight-mid-dark":
@@ -77,44 +74,41 @@ const comboCommentary = {
   "blue-straight-light":
     "Polished exterior, creamy interior, and deeply sarcastic soul.",
   "white-kinky-mid-dark":
-    "Soft exterior, unpredictable interior — quietly scheming for world fondue domination.",
+    "Soft exterior, unpredictable interior quietly scheming for world fondue domination.",
   "white-curly-dark":
     "Melty, emotional, and somehow both classy and sticky at once.",
   "white-dreadlocks-dark":
-    "Stretchy resilience with a sharp outline — the main character of dairycore.",
+    "Stretchy resilience with a sharp outline the main character of dairycore.",
   default:
-    "We don’t know what to say about you — perhaps you’re a new kind of cheese entirely!"
+    "We don’t know what to say about you... Perhaps you’re a new kind of cheese entirely!",
 };
-
-
 
 function preload() {
   cheeseImages = {
-    
     // Color shirts
     cheddar: loadImage("../images/cheddar.png"),
     gorgonzola: loadImage("../images/gorgonzola.png"),
     swiss: loadImage("../images/swiss.png"),
     pesto: loadImage("../images/pesto.png"),
     mozzarella: loadImage("../images/mozza.png"),
-    
+
     // Hair Style
     roquefort: loadImage("../images/roquefort.png"),
     parmesan: loadImage("../images/parmesan.png"),
     gouda: loadImage("../images/gouda.png"),
     brie: loadImage("../images/brie.png"),
     provolone: loadImage("../images/provolone.png"),
-    
+
     // Skin-tone
     feta: loadImage("../images/feta.png"),
     bluecheese: loadImage("../images/bluecheese.png"),
     camembert: loadImage("../images/camembert.png"),
-    emmental: loadImage("../images/emmental.png")
+    emmental: loadImage("../images/emmental.png"),
   };
 }
 
 function setup() {
-	const canvas = createCanvas(windowWidth * 0.9, windowHeight * 0.9);
+  const canvas = createCanvas(windowWidth * 0.9, windowHeight * 0.9);
   canvas.parent("container");
   createInitialParticles();
 }
@@ -124,7 +118,11 @@ function draw() {
 
   updateTransitions();
 
-  if (isRunning && poseModelLoaded && millis() - lastPoseTime > CONFIG.POSE_INTERVAL) {
+  if (
+    isRunning &&
+    poseModelLoaded &&
+    millis() - lastPoseTime > CONFIG.POSE_INTERVAL
+  ) {
     detectPose();
     lastPoseTime = millis();
   }
@@ -136,8 +134,6 @@ function draw() {
 
 // ========== PARTICLE SYSTEM ==========
 
-
-// All of the particles start in the midde
 function createInitialParticles() {
   for (let i = 0; i < 45; i++) {
     colorParticles.push(new CheeseParticle("color"));
@@ -146,7 +142,6 @@ function createInitialParticles() {
   }
 }
 
-// Update and display particles in real time
 function updateAndDisplayParticles(array, kind) {
   for (let i = array.length - 1; i >= 0; i--) {
     const p = array[i];
@@ -161,7 +156,6 @@ function updateAndDisplayParticles(array, kind) {
 
 // ========== POSE CONTROL ==========
 
-
 function updateParticlesWithPose() {
   if (!poses.length || !poses[0].keypoints) return;
   const kp = poses[0].keypoints;
@@ -174,10 +168,9 @@ function updateParticlesWithPose() {
     leftWrist: kp.find((k) => k.name === "left_wrist"),
     rightWrist: kp.find((k) => k.name === "right_wrist"),
     leftElbow: kp.find((k) => k.name === "left_elbow"),
-    rightElbow: kp.find((k) => k.name === "right_elbow")
+    rightElbow: kp.find((k) => k.name === "right_elbow"),
   };
 
-  // Smooth assignment (with interpolation)
   function assignTargets(particles) {
     particles.forEach((p, i) => {
       let t = null;
@@ -195,7 +188,6 @@ function updateParticlesWithPose() {
 
       if (t) {
         if (p.target) {
-          // Interpolate for smoother motion
           p.target.x = lerp(p.target.x, t.x, 0.3);
           p.target.y = lerp(p.target.y, t.y, 0.3);
         } else {
@@ -213,22 +205,16 @@ function updateParticlesWithPose() {
 }
 window.updateParticlesWithPose = updateParticlesWithPose;
 
-
-
-
-
 function detectHandMotion(body, scaleX, scaleY) {
   const left = body.leftWrist;
   const right = body.rightWrist;
-  const threshold = 25; // pixels per update
+  const threshold = 25;
 
-  // Skip if wrists aren't detected
   if (!left || !right || left.score < 0.3 || right.score < 0.3) return;
 
   const leftPos = createVector(left.x * scaleX, left.y * scaleY);
   const rightPos = createVector(right.x * scaleX, right.y * scaleY);
 
-  // Calculate movement distance
   let leftSpeed = 0;
   let rightSpeed = 0;
 
@@ -238,15 +224,14 @@ function detectHandMotion(body, scaleX, scaleY) {
   lastLeftWrist = leftPos.copy();
   lastRightWrist = rightPos.copy();
 
-  // Trigger particle reaction if significant motion detected
   const now = millis();
-  if (now - lastMotionTime > 800 && (leftSpeed > threshold || rightSpeed > threshold)) {
+  if (
+    now - lastMotionTime > 800 &&
+    (leftSpeed > threshold || rightSpeed > threshold)
+  ) {
     lastMotionTime = now;
   }
 }
-
-
-
 
 // ========== CHEESE PARTICLE CLASS ==========
 
@@ -326,7 +311,9 @@ class CheeseParticle {
   }
 }
 
-// ========== UI DISPLAY ==========
+// ========== UI DISPLAY (with 10s delay) ==========
+
+let cheeseDisplayTimer = null;
 
 function updateCheeseDisplay() {
   const display = document.getElementById("cheeseDisplay");
@@ -339,24 +326,38 @@ function updateCheeseDisplay() {
   const comboKey = `${currentColorCheese}-${currentHairCheese}-${currentSkinCheese}`;
   const comboText = `You are ${colorObj.name} (shirt) + ${hairObj.name} (hair) + ${skinObj.name} (skin)!`;
 
-  // Smart fallback generator
+  if (cheeseDisplayTimer) {
+    clearTimeout(cheeseDisplayTimer);
+  }
+
+  display.innerHTML = `<strong>${comboText}</strong><br><em>Detecting your unique cheese vibe... Stand by while we're cooking</em>`;
+  display.style.color = "#ffd700";
+
   let commentary = comboCommentary[comboKey.toLowerCase()];
   if (!commentary) {
-    // make a randomized playful fallback
     const randomFallbacks = [
-      "Mild yet unpredictable — we’d ferment art with you any day.",
+      "Mild yet unpredictable, we’d ferment art with you any day.",
       "A rare vintage blend of chaos and charm. Aged to perfection?",
-      "Distinct, buttery, and a little untamed — definitely a limited-edition flavor.",
+      "Distinct, buttery, and a little untamed, definitely a limited‑edition flavor.",
       "Somewhere between sweet cream and full meltdown… in a good way.",
       "Mysteriously cheesy. Possibly immortalized on a fancy charcuterie board.",
       "Complex notes of drama and delight swirl in your presence.",
-      "Experimental dairy vibes detected — award-winning potential!",
-      "Hard to categorize, impossible to ignore — you’re cheese avant-garde."
+      "Experimental dairy vibes detected, award‑winning potential!",
+      "Hard to categorize, impossible to ignore, you’re cheese avant‑garde.",
     ];
     commentary =
       randomFallbacks[Math.floor(Math.random() * randomFallbacks.length)];
   }
 
-  display.innerHTML = `<strong>${comboText}</strong><br><em>${commentary}</em>`;
-  display.style.color = "#ffd700";
+  cheeseDisplayTimer = setTimeout(() => {
+    const emEl = display.querySelector("em");
+    if (emEl) {
+      emEl.textContent = commentary;
+      emEl.style.opacity = 0;
+      emEl.style.transition = "opacity 1s";
+      requestAnimationFrame(() => {
+        emEl.style.opacity = 1;
+      });
+    }
+  }, 5000);
 }

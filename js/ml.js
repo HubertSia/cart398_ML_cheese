@@ -69,7 +69,7 @@ async function initTeachableMachine() {
 
   try {
     const colorURL =
-      "https://teachablemachine.withgoogle.com/models/NkPL0V_Tj/";
+      "https://teachablemachine.withgoogle.com/models/dOVTn7CC_/";
     const hairURL =
       "https://teachablemachine.withgoogle.com/models/XMUVVCrXJ/";
     const skinURL =
